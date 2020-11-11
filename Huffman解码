@@ -1,0 +1,163 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define _CRT_SECURE_NO_WARNINGS
+
+typedef struct HTNode
+{
+	char data;
+	HTNode* lchild;
+	HTNode* rchild;
+}HTNode,*HTree;
+
+typedef struct CodeNode
+{
+	char data;
+	char code[10];
+}CodeNode;
+CodeNode n[50];
+char a[100] = { 0 };
+
+
+void creatHTree(CodeNode* n, HTree& HTroot,int m )
+{
+	HTree h = NULL;//创建根节点
+	HTree t = NULL;//用来开辟节点空间的指针
+	HTree temp = NULL;//指向正在遍历的节点
+	h = (HTree)malloc(sizeof(HTNode));
+	h->lchild = NULL;
+	h->rchild = NULL;
+	HTroot = h;
+	for (int i = 0; i < m; i++)  //m种编码
+	{
+		temp = HTroot;  //开始遍历每种编码的时候都将temp指向根节点
+		for (int j = 0; j < strlen(n[i].code); j++)//遍历每种编码创建哈夫曼树
+		{
+			
+			if (n[i].code[j] == '0'&&temp->lchild==NULL)  //左节点为空，开辟空间
+			{
+               t = (HTree)malloc(sizeof(HTNode));
+			   if (j == strlen(n[i].code) - 1)  //如果到达编码的最后一个字符即叶节点将权值赋给叶节点
+			   {
+				   t->data = (n + i)->data;
+			   }
+			   t->lchild = NULL;
+			   t->rchild = NULL;
+			   temp->lchild = t;      //将新开辟的空间赋给temp左孩
+			   temp = temp->lchild;  //temp指向叶节点
+			}
+			if (n[i].code[j] == '0' && temp->lchild != NULL) //左节点不为空，向下遍历
+			{
+				temp = temp->lchild;
+			}
+			if (n[i].code[j] == '1'&& temp->rchild == NULL) //右节点为空，开辟空间
+			{
+				t = (HTree)malloc(sizeof(HTNode));
+				if (j == strlen(n[i].code) - 1)
+				{
+					t->data = (n + i)->data;
+				}
+				t->lchild = NULL;
+				t->rchild = NULL;
+				temp->rchild = t;
+				temp = temp->rchild;
+			}
+			if (n[i].code[j] == '1' && temp->rchild != NULL) //右节点不为空，向下遍历
+			{
+				temp = temp->rchild;
+			}
+		}
+	}
+}
+
+void CharSetHuffmanDecoding(HTree HTroot, char* cd)
+{
+	HTree T = NULL;
+	int i = 0;
+	//当要解码的字符串没有结束时
+	while(cd[i] != '\0')
+	{
+		T = HTroot;
+		//当还没有到达哈夫曼树的叶子并且要解码的字符串没有结束时
+		while ((T->lchild != NULL && T->rchild != NULL) && cd[i] != '\0')
+		{
+			if (cd[i] == '0')
+			{
+				//如果是0，则叶子在左子树
+				T = T->lchild;
+			}
+			else
+			{
+				//如果是1，则叶子在右子树
+				T = T->rchild;
+			}
+			i++;
+		}
+			//如达果到哈夫曼树的叶子时
+			if (T->lchild == NULL && T->rchild == NULL)
+			{
+				printf("%c", T->data);
+			}
+			else      //如果编号为p的结点不是叶子，那么编码有错
+			{
+				printf("\n解码出错! \n");
+				return;
+			}
+	}
+	printf("\n");
+}
+
+char* getTxt()
+{
+	char a[100];
+	int i = 0;
+	FILE *fp;
+	fp = fopen("score1.txt", "r");
+	while (!feof(fp))    //读取到文件尾
+	{
+		fscanf(fp, "%c", &a[i]);
+		i++;
+	}
+	fclose(fp);
+	return a;
+}
+
+void destoryHTree(HTree t)
+{
+	if (t != NULL) {
+		destoryHTree(t->lchild);
+		destoryHTree(t->rchild);
+		free(t);
+	}
+}
+
+int main()
+{
+	int m;
+	int i = 0;
+	scanf("%d", &m);
+	char b[100];
+	HTree HTroot;
+	getchar();
+	for(int i = 0;i<m;i++)
+	{
+		gets_s(b);
+		n[i].data = b[0];
+		for (int j = 0; j < strlen(b); j++)
+		{
+			n[i].code[j] = b[j + 2];
+		}
+	}
+	i = 0;
+	FILE *fp;
+	fp = fopen("in.txt", "r");
+	while (!feof(fp))    //读取到文件尾
+	{
+		fscanf(fp, "%c", &a[i]);
+		i++;
+	}
+	fclose(fp);
+	creatHTree(n, HTroot, m);
+	CharSetHuffmanDecoding(HTroot, a);
+	destoryHTree(HTroot);
+}
